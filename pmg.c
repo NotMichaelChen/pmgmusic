@@ -323,19 +323,20 @@ static void hash_file(FILE *file, unsigned char *hash, unsigned hash_len)
 {
   static char buf[BUF_SIZE];
   unsigned cur_len;
-  EVP_MD_CTX mdctx;
+  EVP_MD_CTX *mdctx = EVP_MD_CTX_new(); g_assert(mdctx != NULL);
   const EVP_MD *md = EVP_sha1();
   int result;
 
   g_assert(EVP_MD_size(md) == (int) hash_len);
-  result = EVP_DigestInit(&mdctx, md); g_assert(result == 1);
+  result = EVP_DigestInit(mdctx, md); g_assert(result == 1);
   result = fseek(file, 0, SEEK_SET); g_assert(result == 0);
   while (1) {
     result = fread(buf, 1, BUF_SIZE, file); g_assert(result >= 0); cur_len = result;
     if (cur_len == 0) break;
-    result = EVP_DigestUpdate(&mdctx, buf, cur_len); g_assert(result == 1);
+    result = EVP_DigestUpdate(mdctx, buf, cur_len); g_assert(result == 1);
   }
-  result = EVP_DigestFinal(&mdctx, hash, NULL); g_assert(result == 1);
+  result = EVP_DigestFinal(mdctx, hash, NULL); g_assert(result == 1);
+  EVP_MD_CTX_free(mdctx);
 }
 #undef BUF_SIZE
 
